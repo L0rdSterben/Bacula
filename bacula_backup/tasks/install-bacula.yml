@@ -1,0 +1,52 @@
+- hosts: backup-server
+  become: true
+  vars:
+    postgres_db: mydb
+    postgres_user: myuser
+    postgres_password: mypassword
+    backup_path: /mnt/nfs/backup
+  tasks:
+  - name: Install Bacula
+    yum:
+      name: bacula-director-mysql bacula-storage-mysql bacula-client
+      state: present
+    notify: restart bacula-director
+  - name: Create backup directory on NFS server
+    file:
+      path: "{{ backup_path }}"
+      state: directory
+  - name: Set ownership and permissions for backup directory
+    file:
+      path: "{{ backup_path }}"
+      owner: bacula
+      group: bacula
+      mode: '0770'
+  - name: Generate Bacula director configuration file
+    template:
+      src: director.conf.j2
+      dest: /etc/bacula/bacula-dir.conf
+    notify: restart bacula-director
+  - name: Generate Bacula storage configuration file
+    template:
+      src: storage.conf.j2
+      dest: /etc/bacula/bacula-sd.conf
+    notify: restart bacula-storage
+  - name: Generate Bacula client configuration file
+    template:
+      src: client.conf.j2
+      dest: /etc/bacula/bacula-fd.conf
+    notify: restart bacula-fd
+  - name: Generate backup script
+    template:
+      src: postgres_backup.sh.j2
+      dest: /usr/local/bin/postgres_backup.sh
+      mode: '0755'
+  - name: Create cron job for weekly backups
+    cron:
+      name: "Backup PostgreSQL database"
+      user: root
+      minute: 0
+      hour: 0
+      weekday: 1
+      job: "/usr/local/bin/postgres_backup.sh {{ postgres_db }} {{ postgres_user }} {{ postgres_password }} {{ backup_path }}"
+

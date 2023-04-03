@@ -1,0 +1,36 @@
+Director {
+  Name = {{ bacula_director_name }}
+  DIRport = {{ bacula_director_port }}
+  QueryFile = /usr/lib/bacula/query.sql
+  WorkingDirectory = /var/lib/bacula
+  PidDirectory = /var/run/bacula
+  Maximum Concurrent Jobs = {{ bacula_maximum_concurrent_jobs }}
+  Password = "{{ bacula_director_password }}"
+
+  Messages {
+    Name = Standard
+    Director = {{ bacula_director_name }}
+  }
+
+  Job {
+    Name = "BackupClient"
+    Type = Backup
+    Client = {{ bacula_client_name }}
+    FileSet = {{ bacula_fileset_name }}
+    Schedule = {{ bacula_schedule_name }}
+    Storage = {{ bacula_storage_name }}
+    Priority = 10
+    Write Bootstrap = "/var/lib/bacula/bacula-dir.bsr"
+    Maximum Concurrent Jobs = {{ bacula_maximum_concurrent_jobs }}
+    Messages = Standard
+  }
+
+  Catalog {
+    Name = {{ bacula_catalog_name }}
+    dbname = {{ bacula_catalog_dbname }}
+    dbuser = {{ bacula_catalog_dbuser }}
+    dbpassword = "{{ bacula_catalog_dbpassword }}"
+    dbaddress = {{ bacula_catalog_dbaddress }}
+  }
+}
+

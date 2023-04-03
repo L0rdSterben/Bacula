@@ -1,0 +1,72 @@
+Storage {
+  Name = {{ storage_name }}
+  Address = {{ storage_address }}
+  SDPort = {{ storage_sdport }}
+  Password = "{{ storage_password }}"
+  Device = {{ storage_device }}
+  Media Type = {{ storage_media_type }}
+  Maximum Concurrent Jobs = {{ storage_max_concurrent_jobs }}
+}
+
+# Definition of file storage device
+Device {
+  Name = {{ storage_device }}
+  Media Type = {{ storage_media_type }}
+  Archive Device = {{ storage_archive_device }}
+  LabelMedia = {{ storage_label_media }}
+  Random Access = {{ storage_random_access }}
+  AutomaticMount = {{ storage_automatic_mount }}
+  RemovableMedia = {{ storage_removable_media }}
+  AlwaysOpen = {{ storage_always_open }}
+  LabelFormat = "{{ storage_label_format }}"
+}
+
+# Definition of NFS mount
+Device {
+  Name = {{ storage_mount }}
+  Media Type = File
+  Archive Device = {{ storage_mount_path }}
+  LabelMedia = no
+  Random Access = Yes
+  AutomaticMount = Yes
+  RemovableMedia = No
+  AlwaysOpen = No
+}
+
+# Definition of local file storage
+Storage {
+  Name = File1
+  Address = localhost
+  SDPort = {{ storage_sdport }}
+  Password = "{{ storage_password }}"
+  Device = {{ storage_device }}
+  Media Type = {{ storage_media_type }}
+  Maximum Concurrent Jobs = {{ storage_max_concurrent_jobs }}
+}
+
+# Definition of local file storage device
+Device {
+  Name = File1
+  Media Type = {{ storage_media_type }}
+  Archive Device = /var/lib/bacula/storage
+  LabelMedia = {{ storage_label_media }}
+  Random Access = {{ storage_random_access }}
+  AutomaticMount = {{ storage_automatic_mount }}
+  RemovableMedia = {{ storage_removable_media }}
+  AlwaysOpen = {{ storage_always_open }}
+  LabelFormat = "{{ storage_label_format }}"
+}
+
+# Definition of local file storage device for bootstrap file
+Device {
+  Name = File2
+  Media Type = {{ storage_media_type }}
+  Archive Device = /var/lib/bacula/bacula-dir.bsr
+  LabelMedia = {{ storage_label_media }}
+  Random Access = {{ storage_random_access }}
+  AutomaticMount = {{ storage_automatic_mount }}
+  RemovableMedia = {{ storage_removable_media }}
+  AlwaysOpen = {{ storage_always_open }}
+  LabelFormat = "{{ storage_label_format }}"
+}
+
