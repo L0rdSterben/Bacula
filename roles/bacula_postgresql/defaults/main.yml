@@ -1,0 +1,6 @@
+---
+pg_version: "9.6"
+bacula_version: "11.0.5"
+bacula_pg_password: "qwe123"
+bacula_password: "qwe123"
+bacula_addres_FS: localhost
