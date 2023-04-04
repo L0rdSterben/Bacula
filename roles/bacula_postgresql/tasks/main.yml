@@ -1,0 +1,86 @@
+---
+- name: Install Bacula packages
+  yum:
+    name:
+      - bacula-director
+      - bacula-storage
+      - bacula-client
+    state: present
+
+- name: Install PostgreSQL packages
+  yum:
+    name:
+      - postgresql-server
+    state: present
+
+- name: Create Bacula user
+  user:
+    name: bacula
+    comment: "Bacula backup user"
+    shell: /bin/false
+    system: true
+
+- name: Create Bacula directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: bacula
+    group: bacula
+    mode: '0750'
+  with_items:
+    - /etc/bacula
+    - /var/lib/bacula
+    - /var/log/bacula
+    - /var/run/bacula
+
+- name: Create PostgreSQL user
+  postgresql_user:
+    db: mydatabase
+    name: bacula
+    password: "{{ bacula_pg_password }}"
+    priv: SUPERUSER,CREATEDB,CREATEROLE
+
+- name: Configure Bacula Director
+  template:
+    src: bacula-dir.conf.j2
+    dest: /etc/bacula/bacula-dir.conf
+    mode: '0640'
+  notify: Restart Bacula Director
+
+- name: Configure Bacula Storage
+  template:
+    src: bacula-sd.conf.j2
+    dest: /etc/bacula/bacula-sd.conf
+    mode: '0640'
+  notify: Restart Bacula Storage
+
+- name: Configure Bacula File Daemon
+  template:
+    src: bacula-fd.conf.j2
+    dest: /etc/bacula/bacula-fd.conf
+    mode: '0640'
+  notify: Restart Bacula File Daemon
+
+- name: Configure Bacula services
+  systemd:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  with_items:
+    - bacula-dir
+    - bacula-sd
+    - bacula-fd
+
+#- name: Configure NFS mount point
+#  mount:
+#    path: /mnt/nfs
+#    src: "{{ nfs_server }}:/mnt/nfs"
+#    fstype: nfs
+#    opts: defaults
+#    state: mounted
+#- name: Add NFS mount to Bacula Storage configuration
+#  lineinfile:
+#    path: /etc/bacula/bacula-sd.conf
+#    line: "Device{{ item.device_id }} = FileStorage"
+#  with_items:
+#    - { device_id: "1", path: "/mnt/nfs" }
