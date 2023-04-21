@@ -1,17 +1,3 @@
-#
-# Default Bacula Director Configuration file
-#
-#  The only thing that MUST be changed is to add one or more
-#   file or directory names in the Include directive of the
-#   FileSet resource.
-#
-#  For Bacula release 5.2.13 (19 February 2013) -- redhat (Core)
-#
-#  You might also want to change the default email address
-#   from root to your address.  See the "mail" and "operator"
-#   directives in the Messages resource.
-#
-
 Director {                            # define myself
   Name = bacula-dir
   DIRport = 9101                # where we listen for UA connections
@@ -19,169 +5,124 @@ Director {                            # define myself
   WorkingDirectory = "/var/spool/bacula"
   PidDirectory = "/var/run"
   Maximum Concurrent Jobs = 1
-  Password = "{{ bacula_password }}"         # Console password
-  DirAddress = 127.0.0.1
+  Password = "{{bacula_password}}"         # Console password
+  DirAddress = 0.0.0.0
 }
 
-#Набор дефолтных параметров для Джоба
-JobDefs {
-  Name = "DefaultJob"
+Джобы для бэкапа
+{% for client in bacula_clients %}
+Job {
+  Name = "RemoteBackup-{{client.name}}"
   Type = Backup
   Level = Incremental
-  Client = bacula-fd 
-  FileSet = "Postgresql"
-  Schedule = "Weekly"
+  Client = {{client.name}}
+  FileSet = "{{client.FSname}}"
+  Schedule = "Daily"
   Storage = File
-  Pool = File
+  Pool = RemoteFile
   Messages = Standard
   Priority = 10
   Write Bootstrap = "/var/spool/bacula/%c.bsr"
 }
+{% endfor %}
 
-#Джоб для бэкапа графаны
+#Джобы для рестора
+{% for client in bacula_clients %}
 Job {
-  Name = "BackupGrafanadb"
-  JobDefs = "DefaultJob"
-  Client = "bacula-fd"
-  FileSet="Grafanadb"
-  Level = Full
-  Schedule = "Weekly"
-  Storage = File
-  Pool = File
-  Messages = Standard
-  Priority = 10
-  Write Bootstrap = "/var/spool/bacula/%c.bsr"
-}
-
-#Джоб для рестора графаны
-Job {
-  Name = "RestoreGrafanadb"
+  Name = "RestoreRemote-{{client.name}}"
   Type = Restore
-  Client=bacula-fd
-  FileSet="Grafanadb"
+  Client = {{client.name}}
+  FileSet = "{{client.FSname}}"
   Storage = File
   Pool = File
   Messages = Standard
   Where = /bacula/restore
 }
+{% endfor %}
 
-
-#Параметры бэкапа графаны
+#Параметры бэкапов
+{% for client in bacula_clients %}
 FileSet {
-  Name = "Grafanadb"
+  Name = "{{client.FSname}}"
   Include {
     Options {
       signature = MD5
       compression = GZIP
     }
-    File = /var/lib/grafana/
+    File = {{client.dirfrombkp}}
   }
 }
+{% endfor %}
 
-FileSet {
-  Name = "Postgresql"
-  Include {
-    Options {
-      signature = MD5
-    }
-    File = /var/lib/pgsql/data/
-  }
-}
-
-#Расписание бэкапа
 Schedule {
-  Name = "Weekly"
-  Run = Full sun-sat at 23:10
+  Name = "Daily"
+  Run = Full mon-sun at 01:00
 }
 
-# Client (File Services) to backup
+#Клиенты
+{% for client in bacula_clients %}
 Client {
-  Name = bacula-fd
-  Address = "{{ bacula_addres_FS }}"
-  FDPort = 9102
+  Name = "{{client.name}}"
+  Address = "{{client.address}}"
+  FDPort = {{client.fdport}}
   Catalog = Postgres
-  Password = "{{ bacula_password }}"          # password for FileDaemon
+  Password = "{{client.password}}"          # password for Remote FileDaemon
   File Retention = 30 days            # 30 days
   Job Retention = 6 months            # six months
   AutoPrune = yes                     # Prune expired Jobs/Files
 }
+{% endfor %}
 
 # Definition of file storage device
 Storage {
   Name = File
-  Address = localhost                # N.B. Use a fully qualified name here
+  Address = "{{bacula_storage_address}}"                # N.B. Use a fully qualified name here
   SDPort = 9103
-  Password = "{{ bacula_password }}"
-  Device = FileStorage
+  Password = "{{bacula_password}}"
+  Device = NFSDevice
   Media Type = File
 }
 
 # Настройки для Postgres
 Catalog {
   Name = Postgres
-  dbname = "bacula"; dbuser = "bacula"; dbpassword = "{{ bacula_pg_password }}"
-  dbaddress = "localhost"; dbport = "5432"; dbsocket = ""
+  dbname = "bacula"; dbuser = "bacula"; dbpassword = "{{bacula_pg_password}}"
+  dbaddress = "{{bacula_addres_DB}}"; dbport = "5432"; dbsocket = ""
 }
 
-# Reasonable message delivery -- send most everything to email address
-#  and to the console
 Messages {
   Name = Standard
-#
-# NOTE! If you send to two email or more email addresses, you will need
-#  to replace the %r in the from field (-f part) with a single valid
-#  email address in both the mailcommand and the operatorcommand.
-#  What this does is, it sets the email address that emails would display
-#  in the FROM field, which is by default the same email as they're being
-#  sent to.  However, if you send email to more than one address, then
-#  you'll have to set the FROM address manually, to a single address. 
-#  for example, a 'no-reply@mydomain.com', is better since that tends to
-#  tell (most) people that its coming from an automated source.
-
-#
   #mailcommand = "/usr/sbin/bsmtp -h localhost -f \"\(Bacula\) \<%r\>\" -s \"Bacula: %t %e of %c %l\" %r"
   mailcommand = ""
   #operatorcommand = "/usr/sbin/bsmtp -h localhost -f \"\(Bacula\) \<%r\>\" -s \"Bacula: Intervention needed for %j\" %r"
-  #mail = root@localhost = all, !skipped            
+  #mail = root@localhost = all, !skipped
   #operator = root@localhost = mount
   #console = all, !skipped, !saved
-#
-# WARNING! the following will create a file that you must cycle from
-#          time to time as it will grow indefinitely. However, it will
-#          also keep all your messages if they scroll off the console.
-#
   #append = "/var/log/bacula/bacula.log" = all, !skipped
   #catalog = all
 }
 
-
-#
-# Message delivery for daemon messages (no job).
 Messages {
   Name = Daemon
   mailcommand = "/usr/sbin/bsmtp -h localhost -f \"\(Bacula\) \<%r\>\" -s \"Bacula daemon message\" %r"
-  mail = root@localhost = all, !skipped            
+  mail = root@localhost = all, !skipped
   console = all, !skipped, !saved
   append = "/var/log/bacula/bacula.log" = all, !skipped
 }
 
-# File Pool definition
 Pool {
-  Name = File
-  Label Format = Local-
+  Name = RemoteFile
   Pool Type = Backup
   Recycle = yes                       # Bacula can automatically recycle Volumes
+  Label Format = Remote-
   AutoPrune = yes                     # Prune expired volumes
   Volume Retention = 365 days         # one year
   Maximum Volume Bytes = 50G          # Limit Volume size to something reasonable
   Maximum Volumes = 100               # Limit number of Volumes in Pool
 }
 
-#
-# Restricted console used by tray-monitor to get the status of the director
-#
 Console {
   Name = bacula-mon
-  Password = "{{ bacula_password }}"
+  Password = "{{bacula_password}}"
   CommandACL = status, .status
 }

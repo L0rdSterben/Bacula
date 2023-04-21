@@ -1,6 +1,37 @@
 ---
-pg_version: "9.6"
-bacula_version: "11.0.5"
-bacula_pg_password: "qwe123"
-bacula_password: "qwe123"
-bacula_addres_FS: localhost
+bacula_pg_password: qwe123
+bacula_password: qwe123
+bacula_addres_DB: localhost
+bacula_client_password: qwe123
+
+bacula_configs:
+  - src: bacula-dir.conf.j2
+    dest: /etc/bacula/bacula-dir.conf
+    mode: '0640'
+    notify: Restart Bacula Director
+  - src: bacula-sd.conf.j2
+    dest: /etc/bacula/bacula-sd.conf
+    mode: '0640'
+    notify: Restart Bacula Storage
+  - src: bacula-fd.conf.j2
+    dest: /etc/bacula/bacula-fd.conf
+    mode: '0640'
+    notify: Restart Bacula File Daemon
+
+
+bacula_clients:
+  - name: Grafana
+    address: 172.16.204.70 #Тут необходимо реализовать ссылку на ip из inventory файла
+    fdport: 9102
+    password: qwe123
+    dirfrombkp: /var/lib/grafana/
+    FSname: Grafanadb
+#  - name: client2
+#    address: 192.168.1.100
+#    fdport: 9102
+#    password: password1
+#    dirfrombkp: /var/lib/grafana/
+#    FSname: Grafanadb
+
+bacula_storage_address: 172.16.204.160
+bacula_divecedir: /u01/nfs/bacula

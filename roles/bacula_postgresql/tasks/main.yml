@@ -6,12 +6,21 @@
       - bacula-storage
       - bacula-client
     state: present
+  when: director
+
+- name: Install Bacula packages
+  yum:
+    name:
+      - bacula-client
+    state: present
+  when: client
 
 - name: Install PostgreSQL packages
   yum:
     name:
       - postgresql-server
     state: present
+  when: director
 
 - name: Create Bacula user
   user:
@@ -20,6 +29,20 @@
     shell: /bin/false
     system: true
 
+- name: Allow TCP ports
+  iptables:
+    chain: IN_public_allow
+    protocol: tcp
+    destination_port: "{{ item }}"
+    jump: ACCEPT
+    state: present
+  with_items:
+    - 9101
+    - 9102
+    - 9103
+  when: director
+
+#На всех хостах нужно создать
 - name: Create Bacula directories
   file:
     path: "{{ item }}"
@@ -33,33 +56,37 @@
     - /var/log/bacula
     - /var/run/bacula
 
+#Только на хосте с диретором была проблема с этим файлом
+- name: Create bacula-dir.conms file
+  file:
+    path: /var/spool/bacula/bacula-dir.conms
+    state: touch
+    mode: '0644'
+    owner: bacula
+  when: director
+
 - name: Create PostgreSQL user
   postgresql_user:
     db: mydatabase
     name: bacula
     password: "{{ bacula_pg_password }}"
     priv: SUPERUSER,CREATEDB,CREATEROLE
+  when: director
+
+- name: Copy Bacula configuration files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ bacula_configs }}"
+  when: director
 
 - name: Configure Bacula Director
   template:
-    src: bacula-dir.conf.j2
-    dest: /etc/bacula/bacula-dir.conf
-    mode: '0640'
-  notify: Restart Bacula Director
-
-- name: Configure Bacula Storage
-  template:
-    src: bacula-sd.conf.j2
-    dest: /etc/bacula/bacula-sd.conf
-    mode: '0640'
-  notify: Restart Bacula Storage
-
-- name: Configure Bacula File Daemon
-  template:
-    src: bacula-fd.conf.j2
+    src: bacula-fd-client.conf.j2
     dest: /etc/bacula/bacula-fd.conf
     mode: '0640'
-  notify: Restart Bacula File Daemon
+  when: client
 
 - name: Configure Bacula services
   systemd:
@@ -70,17 +97,4 @@
     - bacula-dir
     - bacula-sd
     - bacula-fd
-
-#- name: Configure NFS mount point
-#  mount:
-#    path: /mnt/nfs
-#    src: "{{ nfs_server }}:/mnt/nfs"
-#    fstype: nfs
-#    opts: defaults
-#    state: mounted
-#- name: Add NFS mount to Bacula Storage configuration
-#  lineinfile:
-#    path: /etc/bacula/bacula-sd.conf
-#    line: "Device{{ item.device_id }} = FileStorage"
-#  with_items:
-#    - { device_id: "1", path: "/mnt/nfs" }
+  when: director
