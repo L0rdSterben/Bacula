@@ -1,0 +1,4 @@
+- hosts: vtc-bkp-infra01:tprom01
+  become: yes
+  roles:
+    - bacula_postgresql
