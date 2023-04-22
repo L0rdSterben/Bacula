@@ -84,12 +84,16 @@
   when: director
 
 - name: Create PG user
+  become: true
+  become_user: postgres
   postgresql_user:
     name: bacula
     password: "{{ bacula_pg_password }}"
   when: director
 
 - name: Create PostgreSQL user
+  become: true
+  become_user: postgres
   postgresql_privs:
     db: mydatabase
     role: bacula
