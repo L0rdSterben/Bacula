@@ -87,13 +87,16 @@
 
 - name: Create PostgreSQL database
   command: sudo -u bacula ./create_postgresql_database
+  when: director
 
 - name: Make PostgreSQL tables
   command: sudo -u bacula ./make_postgresql_tables
+  when: director
 
 - name: Grant PostgreSQL privileges
   command: sudo -u bacula ./grant_postgresql_privileges
-
+  when: director
+  
 - name: Copy Bacula configuration files
   template:
     src: "{{ item.src }}"
