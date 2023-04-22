@@ -28,9 +28,10 @@
     state: present
   when: director
 
-- name: Initialize PostgreSQL
-  shell: "postgresql-setup initdb"
-  when: not postgres_data.stat.exists and director
+#Необходимо реализовать пороверку инициализирован ли Postgres
+#- name: Initialize PostgreSQL
+#  shell: "postgresql-setup initdb"
+#  when: director
 
 - name: Create Bacula user
   user:
