@@ -71,6 +71,13 @@
     owner: bacula
   when: director
 
+- name: Configure Postgres services
+  systemd:
+    name: postgresql
+    enabled: true
+    state: started
+  when: director
+
 - name: Create PG user
   postgresql_user:
     name: bacula
@@ -96,7 +103,7 @@
 - name: Grant PostgreSQL privileges
   command: sudo -u bacula ./grant_postgresql_privileges
   when: director
-  
+
 - name: Copy Bacula configuration files
   template:
     src: "{{ item.src }}"
