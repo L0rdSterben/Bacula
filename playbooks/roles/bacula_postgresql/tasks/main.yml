@@ -99,14 +99,16 @@
     name: bacula
     password: "{{ bacula_pg_password }}"
     state: present
+  when: director
 
 - name: Назначение привилегий пользователю
-  postgresql_user_privileges:
+  community.postgresql.postgresql_user_privileges:
     db: postgres
     login_host: localhost
     login_user: postgres
     name: bacula
     privs: SUPERUSER,CREATEDB,CREATEROLE
+  when: director
 
 #- name: Create PostgreSQL user
 #  become: true
