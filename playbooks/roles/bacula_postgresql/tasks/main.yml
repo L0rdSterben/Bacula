@@ -78,11 +78,11 @@
   when: director
 
 - name: Create PostgreSQL user
-  postgresql_priv:
+  postgresql_privs:
     db: mydatabase
     role: bacula
     objs: ALL_IN_SCHEMA
-    priv: ['SUPERUSER', 'CREATEDB', 'CREATEROLE']
+    privs: ['SUPERUSER', 'CREATEDB', 'CREATEROLE']
   when: director
 
 - name: Create PostgreSQL database
