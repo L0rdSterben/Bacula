@@ -26,9 +26,13 @@ bacula_configs:
 bacula_postgers_configs:
   - src: pg_hba.conf.j2
     dest: /var/lib/pgsql/data/pg_hba.conf
+    owner: postgres
+    group: postgres
     mode: '0600'
   - src: postgresql.conf.j2
     dest: /var/lib/pgsql/data/postgresql.conf
+    owner: postgres
+    group: postgres
     mode: '0600'
 
 bacula_clients:
