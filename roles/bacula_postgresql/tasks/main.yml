@@ -1,5 +1,5 @@
 ---
-- name: Install Bacula packages
+- name: Install Bacula packages for Director
   yum:
     name:
       - bacula-director
@@ -8,7 +8,7 @@
     state: present
   when: director
 
-- name: Install Bacula packages
+- name: Install Bacula packages for Client
   yum:
     name:
       - bacula-client
@@ -73,12 +73,33 @@
     priv: SUPERUSER,CREATEDB,CREATEROLE
   when: director
 
+- name: Create PostgreSQL database
+  command: sudo -u bacula ./create_postgresql_database
+
+- name: Make PostgreSQL tables
+  command: sudo -u bacula ./make_postgresql_tables
+
+- name: Grant PostgreSQL privileges
+  command: sudo -u bacula ./grant_postgresql_privileges
+
 - name: Copy Bacula configuration files
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
+    owner: bacula
+    group: bacula
     mode: "{{ item.mode }}"
   with_items: "{{ bacula_configs }}"
+  when: director
+
+- name: Copy Postgres configuration files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: postgres
+    group: postgres
+    mode: "{{ item.mode }}"
+  with_items: "{{ bacula_postgers_configs }}"
   when: director
 
 - name: Configure Bacula Director
@@ -88,7 +109,7 @@
     mode: '0640'
   when: client
 
-- name: Configure Bacula services
+- name: Configure Bacula services for Director
   systemd:
     name: "{{ item }}"
     enabled: true
@@ -98,3 +119,10 @@
     - bacula-sd
     - bacula-fd
   when: director
+
+- name: Configure Bacula services for Clients
+  systemd:
+    name: bacula-fd
+    enabled: true
+    state: started
+  when: client

@@ -16,8 +16,14 @@ bacula_configs:
   - src: bacula-fd.conf.j2
     dest: /etc/bacula/bacula-fd.conf
     mode: '0640'
-    notify: Restart Bacula File Daemon
 
+bacula_postgers_configs:
+  - src: pg_hba.conf.j2
+    dest: /var/lib/pgsql/data/pg_hba.conf
+    mode: '0600'
+  - src: postgresql.conf.j2
+    dest: /var/lib/pgsql/data/postgresql.conf
+    mode: '0600'
 
 bacula_clients:
   - name: Grafana
