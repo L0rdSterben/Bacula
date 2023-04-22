@@ -1,4 +1,10 @@
 ---
+- set_fact: director=False
+  when: director is not defined
+
+- set_fact: client=False
+  when: client is not defined
+
 - name: Install Bacula packages for Director
   yum:
     name:
@@ -65,12 +71,18 @@
     owner: bacula
   when: director
 
-- name: Create PostgreSQL user
+- name: Create PG user
   postgresql_user:
-    db: mydatabase
     name: bacula
     password: "{{ bacula_pg_password }}"
-    priv: SUPERUSER,CREATEDB,CREATEROLE
+  when: director
+
+- name: Create PostgreSQL user
+  postgresql_priv:
+    db: mydatabase
+    role: bacula
+    objs: ALL_IN_SCHEMA
+    priv: ['SUPERUSER', 'CREATEDB', 'CREATEROLE']
   when: director
 
 - name: Create PostgreSQL database
@@ -106,6 +118,8 @@
   template:
     src: bacula-fd-client.conf.j2
     dest: /etc/bacula/bacula-fd.conf
+    owner: bacula
+    group: bacula
     mode: '0640'
   when: client
 

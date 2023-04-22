@@ -7,14 +7,20 @@ bacula_client_password: qwe123
 bacula_configs:
   - src: bacula-dir.conf.j2
     dest: /etc/bacula/bacula-dir.conf
+    owner: bacula
+    group: bacula
     mode: '0640'
     notify: Restart Bacula Director
   - src: bacula-sd.conf.j2
     dest: /etc/bacula/bacula-sd.conf
+    owner: bacula
+    group: bacula
     mode: '0640'
     notify: Restart Bacula Storage
   - src: bacula-fd.conf.j2
     dest: /etc/bacula/bacula-fd.conf
+    owner: bacula
+    group: bacula
     mode: '0640'
 
 bacula_postgers_configs:
