@@ -28,6 +28,10 @@
     state: present
   when: director
 
+- name: Initialize PostgreSQL
+  shell: "postgresql-setup initdb"
+  when: not postgres_data.stat.exists and director
+
 - name: Create Bacula user
   user:
     name: bacula
@@ -108,8 +112,8 @@
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
-    owner: bacula
-    group: bacula
+    owner: "{{item.owner}}"
+    group: "{{item.group}}"
     mode: "{{ item.mode }}"
   with_items: "{{ bacula_configs }}"
   when: director
@@ -118,13 +122,19 @@
   template:
     src: "{{ item.src }}"
     dest: "{{ item.dest }}"
-    owner: postgres
-    group: postgres
+    owner: "{{item.owner}}"
+    group: "{{item.group}}"
     mode: "{{ item.mode }}"
   with_items: "{{ bacula_postgers_configs }}"
   when: director
 
-- name: Configure Bacula Director
+- name: restart postgres
+  service:
+    name: postgresql
+    state: restarted
+  when: director
+
+- name: Configure Bacula Clients
   template:
     src: bacula-fd-client.conf.j2
     dest: /etc/bacula/bacula-fd.conf
