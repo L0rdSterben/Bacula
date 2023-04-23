@@ -11,6 +11,7 @@
       - bacula-director
       - bacula-storage
       - bacula-client
+      - bacula-console
     state: present
   when: director
 
@@ -118,7 +119,7 @@
     name: postgresql
     state: restarted
   when: director
-  
+
 #- name: Create PostgreSQL database
 #  command: sudo -u bacula /usr/libexec/bacula/create_postgresql_database
 #  when: director
