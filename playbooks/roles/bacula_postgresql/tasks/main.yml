@@ -76,71 +76,54 @@
     owner: bacula
   when: director
 
-#- name: Configure Postgres services
-#  systemd:
-#    name: postgresql
-#    enabled: true
-#    state: started
-#  when: director
-#
-#- name: Create PG user
-#  become: true
-#  become_user: postgres
+- name: Configure Postgres services
+  systemd:
+    name: postgresql
+    enabled: true
+    state: started
+  when: director
+
+#Необходимо реализовать проверку наличия пользователя bacula в postgres с необходимыми привелегиями и наличие ДБ пользователя.
+#- name: Создание пользователя
 #  postgresql_user:
+#    db: postgres
+#    login_host: localhost
+#    login_user: postgres
 #    name: bacula
 #    password: "{{ bacula_pg_password }}"
+#    state: present
 #  when: director
-
-- name: Создание пользователя
-  postgresql_user:
-    db: postgres
-    login_host: localhost
-    login_user: postgres
-    name: bacula
-    password: "{{ bacula_pg_password }}"
-    state: present
-  when: director
-
-- name: Назначение привилегий пользователю
-  community.postgresql.postgresql_user_privileges:
-    db: postgres
-    login_host: localhost
-    login_user: postgres
-    name: bacula
-    privs: SUPERUSER,CREATEDB,CREATEROLE
-  when: director
-
-#- name: Create PostgreSQL user
-#  become: true
-#  become_user: postgres
-#  postgresql_privs:
-#    db: mydatabase
-#    role: bacula
-#    objs: ALL_IN_SCHEMA
-#    privs: ['SUPERUSER', 'CREATEDB', 'CREATEROLE']
+#
+#- name: Назначение привилегий пользователю
+#  community.postgresql.postgresql_user_privileges:
+#    db: postgres
+#    login_host: localhost
+#    login_user: postgres
+#    name: bacula
+#    privs: SUPERUSER,CREATEDB,CREATEROLE
 #  when: director
-
-- name: Create PostgreSQL database
-  command: sudo -u bacula ./create_postgresql_database
-  when: director
-
-- name: Make PostgreSQL tables
-  command: sudo -u bacula ./make_postgresql_tables
-  when: director
-
-- name: Grant PostgreSQL privileges
-  command: sudo -u bacula ./grant_postgresql_privileges
-  when: director
-
-- name: Copy Bacula configuration files
-  template:
-    src: "{{ item.src }}"
-    dest: "{{ item.dest }}"
-    owner: "{{item.owner}}"
-    group: "{{item.group}}"
-    mode: "{{ item.mode }}"
-  with_items: "{{ bacula_configs }}"
-  when: director
+#
+#- name: Create PostgreSQL database
+#  command: sudo -u bacula ./create_postgresql_database
+#  when: director
+#
+#- name: Make PostgreSQL tables
+#  command: sudo -u bacula ./make_postgresql_tables
+#  when: director
+#
+#- name: Grant PostgreSQL privileges
+#  command: sudo -u bacula ./grant_postgresql_privileges
+#  when: director
+#
+#- name: Copy Bacula configuration files
+#  template:
+#    src: "{{ item.src }}"
+#    dest: "{{ item.dest }}"
+#    owner: "{{item.owner}}"
+#    group: "{{item.group}}"
+#    mode: "{{ item.mode }}"
+#  with_items: "{{ bacula_configs }}"
+#  when: director
 
 - name: Copy Postgres configuration files
   template:
