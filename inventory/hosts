@@ -1,3 +1,3 @@
 [test-group]
-vtc-bkp-infra01 ansible_host=192.168.107.129 director=True
-tprom01 ansible_host=192.168.107.130 client=True
+tprom01 ansible_host=192.168.107.129 director=True
+vtc-bkp-infra01 ansible_host=192.168.107.130 client=True
