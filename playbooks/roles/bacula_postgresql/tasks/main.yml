@@ -102,28 +102,6 @@
 #    name: bacula
 #    privs: SUPERUSER,CREATEDB,CREATEROLE
 #  when: director
-#
-#- name: Create PostgreSQL database
-#  command: sudo -u bacula ./create_postgresql_database
-#  when: director
-#
-#- name: Make PostgreSQL tables
-#  command: sudo -u bacula ./make_postgresql_tables
-#  when: director
-#
-#- name: Grant PostgreSQL privileges
-#  command: sudo -u bacula ./grant_postgresql_privileges
-#  when: director
-#
-#- name: Copy Bacula configuration files
-#  template:
-#    src: "{{ item.src }}"
-#    dest: "{{ item.dest }}"
-#    owner: "{{item.owner}}"
-#    group: "{{item.group}}"
-#    mode: "{{ item.mode }}"
-#  with_items: "{{ bacula_configs }}"
-#  when: director
 
 - name: Copy Postgres configuration files
   template:
@@ -139,6 +117,28 @@
   service:
     name: postgresql
     state: restarted
+  when: director
+  
+#- name: Create PostgreSQL database
+#  command: sudo -u bacula /usr/libexec/bacula/create_postgresql_database
+#  when: director
+#
+#- name: Make PostgreSQL tables
+#  command: sudo -u bacula /usr/libexec/bacula/make_postgresql_tables
+#  when: director
+#
+#- name: Grant PostgreSQL privileges
+#  command: sudo -u bacula /usr/libexec/bacula/grant_postgresql_privileges
+#  when: director
+#
+- name: Copy Bacula configuration files
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: "{{item.owner}}"
+    group: "{{item.group}}"
+    mode: "{{ item.mode }}"
+  with_items: "{{ bacula_configs }}"
   when: director
 
 - name: Configure Bacula Clients
