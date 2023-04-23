@@ -9,7 +9,7 @@ Director {                            # define myself
   DirAddress = 0.0.0.0
 }
 
-Джобы для бэкапа
+#Джобы для бэкапа
 {% for client in bacula_clients %}
 Job {
   Name = "RemoteBackup-{{client.name}}"
