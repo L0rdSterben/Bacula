@@ -106,7 +106,7 @@
 - name: Configure PostgreSQL to use md5 authentication
   become: true
   lineinfile:
-    path: /var/lib/pgsql/13/data/pg_hba.conf
+    path: /var/lib/pgsql/data/pg_hba.conf
     regexp: "^host.*all.*all.*127.0.0.1/32.*ident"
     line: "host    all             all             127.0.0.1/32            md5"
     state: present
