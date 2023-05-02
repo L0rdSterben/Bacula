@@ -111,7 +111,7 @@
     db: postgres
     name: bacula
     password: "{{ bacula_pg_password }}"
-    priv: ALL
+    priv: SUPERUSER,CREATEDB,CREATEROLE
     encrypted: yes
   when: director and firstinstall
 
