@@ -103,31 +103,15 @@
 #  when: director and firstinstall
 
 #Изменит на время создания пользователя bacula параметры для postgresql
-- name: Configure PostgreSQL to use md5 authentication
-  become: true
-  lineinfile:
-    path: /var/lib/pgsql/data/pg_hba.conf
-    regexp: "^host.*all.*all.*127.0.0.1/32.*ident"
-    line: "host    all             all             127.0.0.1/32            md5"
-    state: present
-  when: director and firstinstall
-
-- name: Restart postgres
-  service:
-    name: postgresql
-    state: restarted
-  when: director and firstinstall
 
 - name: Create bacula user for PostgreSQL
   become: true
+  become_user: postgres
   postgresql_user:
     db: postgres
     name: bacula
     password: "{{ bacula_pg_password }}"
-    login_user: postgres
-    login_host: localhost
-    login_port: 5432
-    state: present
+    priv: ALL
     encrypted: yes
   when: director and firstinstall
 
