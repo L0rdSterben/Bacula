@@ -1,9 +1,9 @@
 ---
-- set_fact: director=False
-  when: director is not defined
+- set_fact: bacula_director=False
+  when: bacula_director is not defined
 
-- set_fact: client=False
-  when: client is not defined
+- set_fact: bacula_client=False
+  when: bacula_client is not defined
 
 - name: Install Bacula packages for Director
   yum:
@@ -13,26 +13,25 @@
       - bacula-client
       - bacula-console
     state: present
-  when: director
+  when: bacula_director
 
 - name: Install Bacula packages for Client
   yum:
     name:
       - bacula-client
     state: present
-  when: client
+  when: bacula_client
 
 - name: Install PostgreSQL packages
   yum:
     name:
       - postgresql-server
     state: present
-  when: director
+  when: bacula_director
 
-#работает
-#- name: Initialize PostgreSQL
-#  shell: "postgresql-setup initdb"
-#  when: director and firstinstall
+- name: Initialize PostgreSQL
+  shell: "postgresql-setup initdb"
+  when: bacula_director and bacula_firstinstall
 
 - name: Create Bacula user
   user:
@@ -52,7 +51,7 @@
     - 9101
     - 9102
     - 9103
-  when: director 
+  when: bacula_director 
 
 - name: Create Bacula directories
   file:
@@ -73,36 +72,14 @@
     state: touch
     mode: '0644'
     owner: bacula
-  when: director
+  when: bacula_director
 
 - name: Configure Postgres services
   systemd:
     name: postgresql
     enabled: true
     state: started
-  when: director
-
-#Необходимо реализовать проверку наличия пользователя bacula в postgres с необходимыми привелегиями и наличие ДБ пользователя.
-#- name: Создание пользователя
-#  postgresql_user:
-#    db: postgres
-#    login_host: localhost
-#    login_user: postgres
-#    name: bacula
-#    password: "{{ bacula_pg_password }}"
-#    state: present
-#  when: director and firstinstall
-#
-#- name: Назначение привилегий пользователю
-#  community.postgresql.postgresql_user_privileges:
-#    db: postgres
-#    login_host: localhost
-#    login_user: postgres
-#    name: bacula
-#    privs: SUPERUSER,CREATEDB,CREATEROLE
-#  when: director and firstinstall
-
-#Изменит на время создания пользователя bacula параметры для postgresql
+  when: bacula_director
 
 - name: Create bacula user for PostgreSQL
   become: true
@@ -114,7 +91,7 @@
     priv: ALL
     role_attr_flags: SUPERUSER,CREATEDB,CREATEROLE
     encrypted: yes
-  when: director and firstinstall
+  when: bacula_director and bacula_firstinstall
 
 - name: Copy Postgres configuration files
   template:
@@ -124,25 +101,25 @@
     group: "{{item.group}}"
     mode: "{{ item.mode }}"
   with_items: "{{ bacula_postgers_configs }}"
-  when: director
+  when: bacula_director
 
 - name: Restart postgres
   service:
     name: postgresql
     state: restarted
-  when: director
+  when: bacula_director
 
 - name: Create PostgreSQL database
   command: sudo -u bacula /usr/libexec/bacula/create_postgresql_database
-  when: director and firstinstall
+  when: bacula_director and bacula_firstinstall
 
 - name: Make PostgreSQL tables
   command: sudo -u bacula /usr/libexec/bacula/make_postgresql_tables
-  when: director and firstinstall
+  when: bacula_director and bacula_firstinstall
 
 - name: Grant PostgreSQL privileges
   command: sudo -u bacula /usr/libexec/bacula/grant_postgresql_privileges
-  when: director and firstinstall
+  when: bacula_director and bacula_firstinstall
 
 - name: Copy Bacula configuration files
   template:
@@ -152,7 +129,7 @@
     group: "{{item.group}}"
     mode: "{{ item.mode }}"
   with_items: "{{ bacula_configs }}"
-  when: director
+  when: bacula_director
 
 - name: Configure Bacula Clients
   template:
@@ -161,7 +138,7 @@
     owner: bacula
     group: bacula
     mode: '0640'
-  when: client
+  when: bacula_client
 
 - name: Configure Bacula services for Director
   systemd:
@@ -172,11 +149,11 @@
     - bacula-dir
     - bacula-sd
     - bacula-fd
-  when: director
+  when: bacula_director
 
 - name: Configure Bacula services for Clients
   systemd:
     name: bacula-fd
     enabled: true
     state: started
-  when: client
+  when: bacula_client
