@@ -114,10 +114,7 @@
     login_port: 5432
     state: present
     encrypted: yes
-    priv:
-      - superuser
-      - createdb
-      - createrole
+    priv: superuser,createdb,createrole
   when: director and firstinstall
 
 - name: Copy Postgres configuration files
