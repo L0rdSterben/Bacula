@@ -135,12 +135,7 @@
     mode: "{{ item.mode }}"
   with_items: "{{ bacula_postgers_configs }}"
   when: director
-
-- name: Restart postgres
-  service:
-    name: postgresql
-    state: restarted
-  when: director
+  notify: restart postgresql
 
 - name: Create PostgreSQL database
   command: sudo -u bacula /usr/libexec/bacula/create_postgresql_database
@@ -190,3 +185,10 @@
     enabled: true
     state: started
   when: client
+
+  handlers:
+  - name: restart postgresql
+    become: true
+    systemd:
+      name: postgresql
+      state: restarted
