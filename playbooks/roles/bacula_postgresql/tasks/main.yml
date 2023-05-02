@@ -102,12 +102,6 @@
 #    privs: SUPERUSER,CREATEDB,CREATEROLE
 #  when: director and firstinstall
 
-- name: Restart postgres
-  service:
-    name: postgresql
-    state: restarted
-  when: director and firstinstall
-
 - name: Create bacula user for PostgreSQL
   become: true
   postgresql_user:
