@@ -3,6 +3,7 @@ bacula_pg_password: qwe123
 bacula_password: qwe123
 bacula_addres_DB: localhost
 bacula_client_password: qwe123
+firstinstall: False
 
 bacula_configs:
   - src: bacula-dir.conf.j2
@@ -19,6 +20,11 @@ bacula_configs:
     notify: Restart Bacula Storage
   - src: bacula-fd.conf.j2
     dest: /etc/bacula/bacula-fd.conf
+    owner: bacula
+    group: bacula
+    mode: '0640'
+  - src: bconsole.conf.j2
+    dest: /etc/bacula/bconsole.conf
     owner: bacula
     group: bacula
     mode: '0640'

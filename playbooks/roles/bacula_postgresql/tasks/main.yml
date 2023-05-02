@@ -30,9 +30,9 @@
   when: director
 
 #Необходимо реализовать пороверку инициализирован ли Postgres
-#- name: Initialize PostgreSQL
-#  shell: "postgresql-setup initdb"
-#  when: director
+- name: Initialize PostgreSQL
+  shell: "postgresql-setup initdb"
+  when: director and firstinstall
 
 - name: Create Bacula user
   user:
@@ -52,7 +52,7 @@
     - 9101
     - 9102
     - 9103
-  when: director
+  when: director 
 
 #На всех хостах нужно создать
 - name: Create Bacula directories
@@ -93,7 +93,7 @@
 #    name: bacula
 #    password: "{{ bacula_pg_password }}"
 #    state: present
-#  when: director
+#  when: director and firstinstall
 #
 #- name: Назначение привилегий пользователю
 #  community.postgresql.postgresql_user_privileges:
@@ -102,7 +102,25 @@
 #    login_user: postgres
 #    name: bacula
 #    privs: SUPERUSER,CREATEDB,CREATEROLE
-#  when: director
+#  when: director and firstinstall
+
+- name: Create bacula user for PostgreSQL
+  become: true
+  postgresql_user:
+    db: postgres
+    name: bacula
+    password: bacula
+    login_user: postgres
+    login_password: "{{ bacula_pg_password }}"
+    login_host: localhost
+    login_port: 5432
+    state: present
+    encrypted: yes
+    roles:
+      - superuser
+      - createdb
+      - createrole
+  when: director and firstinstall
 
 - name: Copy Postgres configuration files
   template:
@@ -114,24 +132,24 @@
   with_items: "{{ bacula_postgers_configs }}"
   when: director
 
-- name: restart postgres
+- name: Restart postgres
   service:
     name: postgresql
     state: restarted
   when: director
 
-#- name: Create PostgreSQL database
-#  command: sudo -u bacula /usr/libexec/bacula/create_postgresql_database
-#  when: director
-#
-#- name: Make PostgreSQL tables
-#  command: sudo -u bacula /usr/libexec/bacula/make_postgresql_tables
-#  when: director
-#
-#- name: Grant PostgreSQL privileges
-#  command: sudo -u bacula /usr/libexec/bacula/grant_postgresql_privileges
-#  when: director
-#
+- name: Create PostgreSQL database
+  command: sudo -u bacula /usr/libexec/bacula/create_postgresql_database
+  when: director and firstinstall
+
+- name: Make PostgreSQL tables
+  command: sudo -u bacula /usr/libexec/bacula/make_postgresql_tables
+  when: director and firstinstall
+
+- name: Grant PostgreSQL privileges
+  command: sudo -u bacula /usr/libexec/bacula/grant_postgresql_privileges
+  when: director and firstinstall
+
 - name: Copy Bacula configuration files
   template:
     src: "{{ item.src }}"
