@@ -43,17 +43,23 @@ bacula_postgers_configs:
 
 bacula_clients:
   - name: Grafana
-    address: 192.168.107.130 #Тут необходимо реализовать ссылку на ip из inventory файла
+    address: {{hostvars['tprom01'].ansible_host}} 
+    fdport: 9102
+    password: qwe123
+    dirfrombkp: /var/lib/grafana/
+    FSname: Grafanadb
+  - name: Grafana
+    address: {{hostvars['tvictoria01'].ansible_host}} 
     fdport: 9102
     password: qwe123
     dirfrombkp: /var/lib/grafana/
     FSname: Grafanadb
 #  - name: client2
-#    address: 192.168.1.100
+#    address: {{hostvars[''].ansible_host}} 
 #    fdport: 9102
 #    password: password1
 #    dirfrombkp: /var/lib/grafana/
 #    FSname: Grafanadb
 
-bacula_storage_address: 192.168.107.131
+bacula_storage_address: {{hostvars['vtc-bkp-infra01'].ansible_host}}
 bacula_divecedir: /u01/nfs/bacula
